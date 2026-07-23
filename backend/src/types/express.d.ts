@@ -1,9 +1,9 @@
-import { IUserWithoutPassword } from "./user";
+import { UserWithoutPassword } from "./user";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: IUserWithoutPassword & {
+      user?: UserWithoutPassword & {
         id: string;
         name: string;
         email: string;

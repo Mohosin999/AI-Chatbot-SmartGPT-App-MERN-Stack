@@ -1,6 +1,6 @@
-import type { IContextBudget } from "./types";
+import type { ContextBudget as ContextBudgetType } from "./types";
 
-export interface IBudgetConfig {
+export interface BudgetConfig {
   totalTokens: number;
   systemPercent: number;
   memoryPercent: number;
@@ -9,7 +9,7 @@ export interface IBudgetConfig {
   reservedPercent: number;
 }
 
-const DEFAULT_CONFIG: IBudgetConfig = {
+const DEFAULT_CONFIG: BudgetConfig = {
   totalTokens: 128_000,
   systemPercent: 5,
   memoryPercent: 5,
@@ -19,14 +19,14 @@ const DEFAULT_CONFIG: IBudgetConfig = {
 };
 
 export class ContextBudget {
-  private config: IBudgetConfig;
+  private config: BudgetConfig;
   private requestCount = 0;
 
-  constructor(config: Partial<IBudgetConfig> = {}) {
+  constructor(config: Partial<BudgetConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
-  allocate(): IContextBudget {
+  allocate(): ContextBudgetType {
     const total = this.config.totalTokens;
     return {
       total,
@@ -40,7 +40,7 @@ export class ContextBudget {
   }
 
   logBudgetAllocation(
-    budget: IContextBudget,
+    budget: ContextBudgetType,
     used: Record<string, number>,
   ): void {
     this.requestCount++;

@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import * as tokenService from "../../../../lib/token";
-import User from "../../../../model/User";
+import User from "../../../../models/User";
 
 const refreshToken = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const payload = {

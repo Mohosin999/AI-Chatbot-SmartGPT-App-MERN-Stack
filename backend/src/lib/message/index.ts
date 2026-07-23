@@ -1,13 +1,17 @@
-import Chat from "../../model/Chat";
-import User from "../../model/User";
+import Chat from "../../models/Chat";
+import User from "../../models/User";
 import { getAIProvider } from "../ai";
 import type { GenerationConfig } from "../ai/provider";
 import { notFound } from "../../utils/error";
 import { contextCompressor } from "../memory/ContextCompressor";
 import { contextBudget } from "../memory/ContextBudget";
 import { tokenCounter } from "../memory/TokenCounter";
-import type { FileInput } from "../../validator/chat";
-import { getToolDefinitions, getToolDefinitionsByNames, executeTool } from "../ai/tools";
+import type { FileInput } from "../../validators/chat";
+import {
+  getToolDefinitions,
+  getToolDefinitionsByNames,
+  executeTool,
+} from "../ai/tools";
 
 const provider = getAIProvider();
 
@@ -113,7 +117,9 @@ const streamMessage = async ({
     );
   }
 
-  const userData = await User.findById(userId).select("customInstructions").lean();
+  const userData = await User.findById(userId)
+    .select("customInstructions")
+    .lean();
   const customInstr = userData?.customInstructions?.trim();
   const systemPrompt = `You are an AI assistant helping ${chat.userName}. Be helpful, accurate, and concise.${customInstr ? `\n\n[User Instructions]\n${customInstr}` : ""}`;
 
@@ -163,9 +169,10 @@ const streamMessage = async ({
     : undefined;
 
   // ---------- Build tools list from requested names ----------
-  const tools = toolNames && toolNames.length > 0
-    ? getToolDefinitionsByNames(toolNames)
-    : undefined;
+  const tools =
+    toolNames && toolNames.length > 0
+      ? getToolDefinitionsByNames(toolNames)
+      : undefined;
 
   // ---------- Token budget logging (unchanged) ----------
   let tokenBudget = budget.total;
@@ -294,7 +301,9 @@ const streamEditMessage = async ({
     );
   }
 
-  const userData = await User.findById(userId).select("customInstructions").lean();
+  const userData = await User.findById(userId)
+    .select("customInstructions")
+    .lean();
   const customInstr = userData?.customInstructions?.trim();
   const systemPrompt = `You are an AI assistant helping ${chat.userName}. Be helpful, accurate, and concise.${customInstr ? `\n\n[User Instructions]\n${customInstr}` : ""}`;
 

@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../../../../model/User";
+import User from "../../../../models/User";
 import { tokenCounter } from "../../../../lib/memory/TokenCounter";
 
 const SYSTEM_PROMPT_MAX_TOKENS = 6_400;
 
-const updateMe = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const updateMe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     const userId = req.user!.id;
     const { customInstructions } = req.body;

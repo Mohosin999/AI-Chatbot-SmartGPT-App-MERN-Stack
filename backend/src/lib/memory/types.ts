@@ -1,4 +1,4 @@
-export interface IContextBudget {
+export interface ContextBudget {
   total: number;
   system: number;
   history: number;

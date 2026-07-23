@@ -1,12 +1,21 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../../../../model/User";
+import User from "../../../../models/User";
 
-const updateName = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const updateName = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     const userId = req.user!.id;
     const { name } = req.body;
 
-    if (!name || typeof name !== "string" || name.trim().length < 5 || name.trim().length > 50) {
+    if (
+      !name ||
+      typeof name !== "string" ||
+      name.trim().length < 5 ||
+      name.trim().length > 50
+    ) {
       res.status(400).json({ message: "Name must be 5-50 characters" });
       return;
     }

@@ -1,4 +1,4 @@
-export interface IMessage {
+export interface Message {
   _id?: { toString(): string } | string;
   id?: string;
   role: "user" | "assistant";
@@ -9,22 +9,42 @@ export interface IMessage {
   chatName?: string;
 }
 
-export interface IChat {
+export interface MessageDocument {
+  _id?: { toString(): string } | string;
+  id?: string;
+  role: string;
+  content: string;
+  timestamp: number;
+  isImage?: boolean;
+  isPublished?: boolean;
+}
+
+export interface Chat {
   _id: string;
   id: string;
   userId: string;
   userName: string;
   name: string;
-  messages: IMessage[];
+  messages: Message[];
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface IChatDoc {
-  _doc: IChat;
+export interface ChatDoc {
+  _doc: Chat;
   id: string;
   userId: string;
   userName: string;
   name: string;
-  messages: IMessage[];
+  messages: Message[];
+}
+
+export interface ChatObj {
+  id: string;
+  userId: string;
+  name: string;
+  userName: string;
+  link?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

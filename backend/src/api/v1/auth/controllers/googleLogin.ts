@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import * as authService from "../../../../lib/auth";
-import { googleLoginSchema } from "../../../../validator/auth";
+import { googleLoginSchema } from "../../../../validators/auth";
 
 const googleLogin = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const parsed = googleLoginSchema.safeParse(req.body);
 

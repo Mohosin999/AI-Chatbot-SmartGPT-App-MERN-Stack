@@ -4,13 +4,13 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../../../lib/token";
-import User from "../../../../model/User";
-import { registerSchema } from "../../../../validator/auth";
+import User from "../../../../models/User";
+import { registerSchema } from "../../../../validators/auth";
 
 const register = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const parsed = registerSchema.safeParse(req.body);
 

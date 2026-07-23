@@ -1,5 +1,5 @@
 import { tokenCounter } from "./TokenCounter";
-import type { IMessageDocument } from "../../model/Chat";
+import type { MessageDocument } from "../../models/Chat";
 
 const TRIVIAL_PATTERNS = [
   /^(ok|okay|yes|yeah|no|nope|sure|alright|fine|got it|i see|thanks|thank you|thx|ty|👍|👎|😊|😂)$/i,
@@ -47,7 +47,7 @@ export class ContextCompressor {
   }
 
   // Remove unimportant messages from the list
-  pruneTrivialMessages(messages: IMessageDocument[]): IMessageDocument[] {
+  pruneTrivialMessages(messages: MessageDocument[]): MessageDocument[] {
     const pruned = messages.filter((msg) => !this.isTrivial(msg.content));
     const removed = messages.length - pruned.length;
     if (removed > 0) {
@@ -58,17 +58,17 @@ export class ContextCompressor {
 
   // Reduce the conversation to fit the token limit
   compressConversation(
-    messages: IMessageDocument[],
+    messages: MessageDocument[],
     maxTokens: number,
   ): {
-    compressed: IMessageDocument[];
-    dropped: IMessageDocument[];
+    compressed: MessageDocument[];
+    dropped: MessageDocument[];
     tokens: number;
   } {
     const pruned = this.pruneTrivialMessages(messages);
 
     let totalTokens = 0;
-    const result: IMessageDocument[] = [];
+    const result: MessageDocument[] = [];
     const reversed = [...pruned].reverse(); // Start from the most recent messages
 
     for (const msg of reversed) {

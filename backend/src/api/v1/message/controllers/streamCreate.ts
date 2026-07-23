@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { streamMessage } from "../../../../lib/message";
-import { createMessageSchema } from "../../../../validator/chat";
+import { createMessageSchema } from "../../../../validators/chat";
 
 const streamCreate = async (
   req: Request,
@@ -57,8 +57,12 @@ const streamCreate = async (
     }
   } catch (error) {
     if ((error as Error).name === "AbortError") return;
-    const errorMessage = error instanceof Error ? error.message : "Stream failed";
-    const isQuota = errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("Quota");
+    const errorMessage =
+      error instanceof Error ? error.message : "Stream failed";
+    const isQuota =
+      errorMessage.includes("429") ||
+      errorMessage.includes("quota") ||
+      errorMessage.includes("Quota");
     const friendlyMessage = isQuota
       ? "AI service quota exceeded. Please wait a moment and try again."
       : errorMessage.length > 200

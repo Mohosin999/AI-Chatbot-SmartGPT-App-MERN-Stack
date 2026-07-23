@@ -1,4 +1,4 @@
-export interface IUser {
+export interface User {
   _id: string;
   id: string;
   name: string;
@@ -11,8 +11,8 @@ export interface IUser {
   updatedAt?: Date;
 }
 
-export interface IUserDoc {
-  _doc: IUser;
+export interface UserDoc {
+  _doc: User;
   id: string;
   name: string;
   email: string;
@@ -22,7 +22,7 @@ export interface IUserDoc {
   customInstructions?: string;
 }
 
-export interface IUserWithoutPassword {
+export interface UserWithoutPassword {
   id: string;
   name: string;
   email: string;

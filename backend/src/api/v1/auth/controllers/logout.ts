@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../../../../model/User";
+import User from "../../../../models/User";
 
 const logout = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;

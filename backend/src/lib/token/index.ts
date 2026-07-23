@@ -2,20 +2,20 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { serverError } from "../../utils/error";
 
-interface IGenerateAccessTokenParams {
+interface GenerateAccessTokenParams {
   payload: Record<string, unknown>;
   algorithm?: string;
   secret?: string;
   expiresIn?: string;
 }
 
-interface IVerifyAccessTokenParams {
+interface VerifyAccessTokenParams {
   token: string;
   algorithm?: string;
   secret?: string;
 }
 
-interface IDecodedTokenParams {
+interface DecodedTokenParams {
   token: string;
   algorithm?: string;
 }
@@ -25,7 +25,7 @@ const generateAccessToken = ({
   algorithm = "HS256",
   secret = process.env.ACCESS_TOKEN_SECRET,
   expiresIn = "1d",
-}: IGenerateAccessTokenParams): string => {
+}: GenerateAccessTokenParams): string => {
   try {
     return jwt.sign(payload, secret as string, { expiresIn, algorithm } as jwt.SignOptions);
   } catch (error) {
@@ -47,7 +47,7 @@ const verifyAccessToken = ({
   token,
   algorithm = "HS256",
   secret = process.env.ACCESS_TOKEN_SECRET,
-}: IVerifyAccessTokenParams): jwt.JwtPayload => {
+}: VerifyAccessTokenParams): jwt.JwtPayload => {
   try {
     const decoded = jwt.verify(token, secret as string, {
       algorithms: [algorithm] as jwt.Algorithm[],
@@ -61,7 +61,7 @@ const verifyAccessToken = ({
 
 const decodedToken = ({
   token,
-}: IDecodedTokenParams): jwt.JwtPayload | null => {
+}: DecodedTokenParams): jwt.JwtPayload | null => {
   try {
     return jwt.decode(token, { json: true }) as jwt.JwtPayload | null;
   } catch (error) {

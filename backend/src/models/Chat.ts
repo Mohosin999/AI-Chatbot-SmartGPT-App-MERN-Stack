@@ -1,27 +1,18 @@
 import { Schema, model, Document } from "mongoose";
+import { MessageDocument } from "../types/chat";
 
-export interface IMessageDocument {
-  _id?: { toString(): string } | string;
-  id?: string;
-  role: string;
-  content: string;
-  timestamp: number;
-  isImage?: boolean;
-  isPublished?: boolean;
-}
-
-export interface IChatDocument extends Document {
+export interface ChatDocument extends Document {
   userId: string;
   userName: string;
   name: string;
-  messages: IMessageDocument[];
+  messages: MessageDocument[];
   summary?: string;
   summaryUpdatedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-const chatSchema = new Schema<IChatDocument>(
+const chatSchema = new Schema<ChatDocument>(
   {
     userId: { type: String, ref: "User", required: true },
     userName: { type: String, required: true },
@@ -36,9 +27,9 @@ const chatSchema = new Schema<IChatDocument>(
     summary: { type: String },
     summaryUpdatedAt: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Chat = model<IChatDocument>("Chat", chatSchema);
+const Chat = model<ChatDocument>("Chat", chatSchema);
 
 export default Chat;

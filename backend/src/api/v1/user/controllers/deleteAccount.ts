@@ -1,8 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../../../../model/User";
-import Chat from "../../../../model/Chat";
+import User from "../../../../models/User";
+import Chat from "../../../../models/Chat";
 
-const deleteAccount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const deleteAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     const userId = req.user!.id;
 

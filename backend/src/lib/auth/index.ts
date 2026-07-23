@@ -3,7 +3,7 @@ import { userExist, createUser, findUserByEmail } from "../user";
 import { badRequest } from "../../utils/error";
 import { generateHash, hashMatched } from "../../utils/hashing";
 import { generateAccessToken, generateRefreshToken } from "../token";
-import User from "../../model/User";
+import User from "../../models/User";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -27,7 +27,13 @@ const register = async ({
   return user;
 };
 
-const login = async ({ email, password }: { email: string; password: string }) => {
+const login = async ({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) => {
   const user = await findUserByEmail(email);
   if (!user) {
     throw badRequest("Invalid Credentials");

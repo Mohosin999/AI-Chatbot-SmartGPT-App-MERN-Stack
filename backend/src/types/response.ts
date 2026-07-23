@@ -1,4 +1,4 @@
-export interface IApiResponse<T = unknown> {
+export interface ApiResponse<T = unknown> {
   code?: number;
   message?: string;
   data?: T;
@@ -7,13 +7,19 @@ export interface IApiResponse<T = unknown> {
   logout?: boolean;
 }
 
-export interface ITransformedItem {
+export interface TransformedItem {
   id: string;
   [key: string]: unknown;
   link: string;
 }
 
-export interface IFormattedMessage {
+export interface GetTransformedItemsParams {
+  items: Record<string, unknown>[];
+  selection: string[];
+  path: string;
+}
+
+export interface FormattedMessage {
   id: string;
   isImage?: boolean;
   isPublished?: boolean;

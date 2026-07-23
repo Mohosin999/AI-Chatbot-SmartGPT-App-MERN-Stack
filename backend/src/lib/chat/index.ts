@@ -1,12 +1,12 @@
-import Chat from "../../model/Chat";
+import Chat from "../../models/Chat";
 import { notFound } from "../../utils/error";
 
-interface IUser {
+interface User {
   id: string;
   name: string;
 }
 
-const createChat = async (user: IUser) => {
+const createChat = async (user: User) => {
   const chatData = {
     userId: user.id,
     name: "New Chat",
@@ -70,7 +70,9 @@ const removeChat = async (id: string) => {
   return Chat.findByIdAndDelete(id);
 };
 
-const removeAllChats = async (userId: string): Promise<{ deletedCount?: number }> => {
+const removeAllChats = async (
+  userId: string,
+): Promise<{ deletedCount?: number }> => {
   if (!userId) throw new Error("User id is required");
   return Chat.deleteMany({ userId });
 };
@@ -84,9 +86,17 @@ const updateChat = async (id: string, data: Record<string, unknown>) => {
   const updatedChat = await Chat.findByIdAndUpdate(
     id,
     { $set: data },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
   return updatedChat;
 };
 
-export { createChat, findAll, findChatById, removeChat, removeAllChats, updateChat, updateMessageInChat };
+export {
+  createChat,
+  findAll,
+  findChatById,
+  removeChat,
+  removeAllChats,
+  updateChat,
+  updateMessageInChat,
+};

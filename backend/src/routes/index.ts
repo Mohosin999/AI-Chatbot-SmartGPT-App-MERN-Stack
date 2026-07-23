@@ -1,6 +1,6 @@
 import { Router } from "express";
-import authenticate from "../middleware/authenticate";
-import authenticateRefresh from "../middleware/authenticateRefresh";
+import authenticate from "../middlewares/authenticate";
+import authenticateRefresh from "../middlewares/authenticateRefresh";
 import { controllers as authController } from "../api/v1/auth";
 import { controllers as chatController } from "../api/v1/chat";
 import { controllers as messageController } from "../api/v1/message";

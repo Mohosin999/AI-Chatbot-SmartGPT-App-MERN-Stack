@@ -1,4 +1,4 @@
-import User from "../../model/User";
+import User from "../../models/User";
 import { badRequest } from "../../utils/error";
 
 const findUserByRefreshToken = async (refreshToken: string) => {

@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import { User } from "../model";
+import User from "../models/User";
 import * as userService from "../lib/user";
 import { authenticationError } from "../utils/error";
 
 const authenticateRefresh = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { refresh_token } = req.body;

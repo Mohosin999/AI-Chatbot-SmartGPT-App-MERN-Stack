@@ -1,16 +1,16 @@
-export interface ITokenPayload {
+export interface TokenPayload {
   id: string;
   name: string;
   email: string;
   role?: string;
 }
 
-export interface IRefreshTokenResult {
+export interface RefreshTokenResult {
   refreshToken: string;
   expiresAt: Date;
 }
 
-export interface IAuthResponse {
+export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
 }
