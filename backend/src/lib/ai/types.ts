@@ -23,7 +23,8 @@ export interface ToolResult {
 }
 
 export interface ContentPart {
-  text: string;
+  text?: string;
+  inlineData?: { mimeType: string; data: string };
 }
 
 export interface Content {
@@ -44,6 +45,7 @@ export interface RegisteredTool {
 
 export interface GeminiPart {
   text?: string;
+  inlineData?: { mimeType: string; data: string };
   functionCall?: { name: string; args: Record<string, unknown> };
   functionResponse?: { name: string; response: { result: unknown } };
 }

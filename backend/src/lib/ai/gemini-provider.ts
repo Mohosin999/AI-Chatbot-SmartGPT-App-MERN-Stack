@@ -63,6 +63,7 @@ export class GeminiProvider implements AIProvider {
       parts: c.parts.map((p) => {
         if (p.functionCall) return { functionCall: p.functionCall };
         if (p.functionResponse) return { functionResponse: p.functionResponse };
+        if (p.inlineData) return { inlineData: p.inlineData };
         return { text: p.text || "" };
       }),
     }));
@@ -227,7 +228,7 @@ export class GeminiProvider implements AIProvider {
   // ---------------------------------------------------------------------
 
   async *generateContentStream(
-    contents: { role: string; parts: { text: string }[] }[],
+    contents: { role: string; parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] }[],
     signal?: AbortSignal,
     options?: {
       config?: GenerationConfig;
@@ -245,7 +246,7 @@ export class GeminiProvider implements AIProvider {
   }
 
   async generateContent(
-    contents: { role: string; parts: { text: string }[] }[],
+    contents: { role: string; parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] }[],
     options?: {
       config?: GenerationConfig;
       tools?: ToolDefinition[];

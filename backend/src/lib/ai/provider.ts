@@ -27,13 +27,13 @@ export interface AIProvider {
   readonly name: string;
 
   generateContentStream(
-    contents: Content[],
+    contents: { role: string; parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] }[],
     signal?: AbortSignal,
     options?: GenerateContentOptions,
   ): AsyncGenerator<string>;
 
   generateContent(
-    contents: Content[],
+    contents: { role: string; parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] }[],
     options?: GenerateContentOptions,
   ): Promise<string>;
 

@@ -1,5 +1,5 @@
-import { ChatObj } from "../types/chat";
-import { GetTransformedItemsParams, TransformedItem } from "../types/response";
+import { ChatObj } from "../lib/chat/types";
+import { GetTransformedItemsParams, TransformedItem } from "./types";
 
 const getTransformedItems = ({
   items = [],

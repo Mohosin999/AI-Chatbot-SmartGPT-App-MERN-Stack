@@ -60,7 +60,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_URL: ${MONGODB_URL}
     volumes:
       - ./backend:/app
       - /app/node_modules

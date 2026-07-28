@@ -8,13 +8,13 @@ import {
   VerifyAccessTokenParams,
 } from "./types";
 
-const REFRESH_TOKEN_TTL_SECONDS = 3 * 60; // 3 minutes
+const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 const generateAccessToken = ({
   payload,
   algorithm = "HS256",
   secret = process.env.ACCESS_TOKEN_SECRET,
-  expiresIn = "1m",
+  expiresIn = "1d",
 }: GenerateAccessTokenParams): string => {
   try {
     return jwt.sign(

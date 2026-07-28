@@ -19,3 +19,10 @@ export interface MessageDocument {
   content: string;
   timestamp: number;
 }
+
+export interface UserWithoutPassword {
+  id: string;
+  name: string;
+  email: string;
+  customInstructions?: string;
+}

@@ -4,7 +4,6 @@ import { getAIProvider } from "../ai";
 import type { GenerationConfig } from "../../types/common";
 import { notFound } from "../../utils/error";
 import { contextCompressor } from "../memory/ContextCompressor";
-import { contextBudget } from "../memory/ContextBudget";
 import { tokenCounter } from "../memory/TokenCounter";
 import type { FileInput } from "../../validators/chat";
 import {
@@ -12,6 +11,7 @@ import {
   getToolDefinitionsByNames,
   executeTool,
 } from "../ai/tools";
+import pdf from "pdf-parse";
 
 const provider = getAIProvider();
 
@@ -27,14 +27,16 @@ const generateChatTitle = async (
   }
 };
 
+const RECENT_MESSAGE_LIMIT = 10;
+
 const summarizeConversation = async (
   messages: { role: string; content: string }[],
 ): Promise<string> => {
   const text = messages
-    .map((m) => `[${m.role}]: ${m.content.slice(0, 300)}`)
+    .map((m) => `[${m.role}]: ${m.content.slice(0, 500)}`)
     .join("\n");
 
-  const prompt = `Summarize this conversation in 2 sentences. Focus on topics discussed and any key information about the user.\n\n${text}`;
+  const prompt = `Summarize this conversation in 10-20 lines. Cover all key topics, decisions, user preferences, and important details. Be concise but thorough.\n\n${text}`;
   try {
     return await provider.generateContentText(prompt);
   } catch {
@@ -103,18 +105,14 @@ const streamMessage = async ({
     ? generateChatTitle(titleText)
     : Promise.resolve(null);
 
-  const budget = contextBudget.allocate();
-
-  const { compressed: prunedMessages, dropped: droppedMessages } =
-    contextCompressor.compressConversation(
-      chat.messages as any,
-      budget.history,
-    );
+  const allMessages = chat.messages.slice(0, -1);
+  const recentMessages = allMessages.slice(-RECENT_MESSAGE_LIMIT);
+  const olderMessages = allMessages.slice(0, -RECENT_MESSAGE_LIMIT);
 
   let droppedSummary = "";
-  if (droppedMessages.length > 0) {
+  if (olderMessages.length > 0) {
     droppedSummary = await summarizeConversation(
-      droppedMessages.map((m) => ({ role: m.role, content: m.content })) as any,
+      olderMessages.map((m) => ({ role: m.role, content: m.content })) as any,
     );
   }
 
@@ -124,7 +122,7 @@ const streamMessage = async ({
   const customInstr = userData?.customInstructions?.trim();
   const systemPrompt = `You are an AI assistant helping ${chat.userName}. Be helpful, accurate, and concise.${customInstr ? `\n\n[User Instructions]\n${customInstr}` : ""}`;
 
-  const contents: { role: string; parts: { text: string }[] }[] = [
+  const contents: { role: string; parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] }[] = [
     {
       role: "user",
       parts: [{ text: `[System Context]\n${systemPrompt}` }],
@@ -134,31 +132,54 @@ const streamMessage = async ({
   if (droppedSummary) {
     contents.push({
       role: "user",
-      parts: [{ text: `[Earlier context]: ${droppedSummary}` }],
+      parts: [{ text: `[Earlier context summary]:\n${droppedSummary}` }],
     });
   }
 
-  const historyMessages = prunedMessages.slice(0, -1);
-  for (const msg of historyMessages) {
+  for (const msg of recentMessages) {
     contents.push({
       role: msg.role,
       parts: [{ text: msg.content }],
     });
   }
 
-  const needsToolTruncation = files && files.length > 0;
-  let toolTruncationNote = "";
-  if (needsToolTruncation) {
-    toolTruncationNote = `\n[Note: ${files!.length} file(s) attached. Key information extracted where possible.]\n`;
-  }
-
   const currentPrompt =
     prompt || (files?.length ? "Analyze the attached file(s)" : "");
-  const finalPrompt = currentPrompt + toolTruncationNote;
+
+  let pdfTexts = "";
+  if (files && files.length > 0) {
+    for (const f of files) {
+      if (f.mimeType === "application/pdf") {
+        try {
+          const buf = Buffer.from(f.data, "base64");
+          const { text } = await pdf(buf);
+          pdfTexts += `\n\n[PDF Content - ${f.name}]:\n${text.slice(0, 5000)}`;
+        } catch {
+          pdfTexts += `\n\n[PDF: ${f.name} - could not extract text]`;
+        }
+      }
+    }
+  }
+
+  const finalPrompt = currentPrompt + pdfTexts;
+
+  const userParts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] = [
+    { text: finalPrompt },
+  ];
+
+  if (files && files.length > 0) {
+    for (const f of files) {
+      if (f.mimeType.startsWith("image/")) {
+        userParts.push({
+          inlineData: { mimeType: f.mimeType, data: f.data },
+        });
+      }
+    }
+  }
 
   contents.push({
     role: "user",
-    parts: [{ text: finalPrompt }],
+    parts: userParts,
   });
 
   // ---------- Build generation config for JSON mode ----------
@@ -175,27 +196,17 @@ const streamMessage = async ({
       ? getToolDefinitionsByNames(toolNames)
       : undefined;
 
-  // ---------- Token budget logging (unchanged) ----------
-  let tokenBudget = budget.total;
+  // ---------- Token budget logging ----------
   const systemTokens = tokenCounter.count(systemPrompt);
   const historyTokens = tokenCounter.count(
-    historyMessages.map((m) => m.content).join(" "),
+    recentMessages.map((m) => m.content).join(" "),
   );
   const promptTokens = tokenCounter.count(finalPrompt);
-  tokenBudget -= systemTokens + historyTokens + promptTokens;
 
-  if (tokenBudget < 100) {
-    console.log(
-      `[ContextBudget] Warning: only ${tokenBudget} tokens remaining for response`,
-    );
-  }
-
-  contextBudget.logBudgetAllocation(budget, {
-    system: systemTokens,
-    history: historyTokens,
-    prompt: promptTokens,
-    total: systemTokens + historyTokens + promptTokens,
-  });
+  console.log(
+    `[Context] recent:${recentMessages.length} older:${olderMessages.length} summary:${droppedSummary ? "yes" : "no"} ` +
+    `tokens: sys:${systemTokens} hist:${historyTokens} prompt:${promptTokens}`,
+  );
 
   // ---------- Call AI provider with config + tools ----------
   const genStream = provider.generateContentStream(contents, signal, {
@@ -287,18 +298,14 @@ const streamEditMessage = async ({
     ? generateChatTitle(prompt)
     : Promise.resolve(null);
 
-  const budget = contextBudget.allocate();
-
-  const { compressed: prunedMessages, dropped: droppedMessages } =
-    contextCompressor.compressConversation(
-      chat.messages as any,
-      budget.history,
-    );
+  const allMessages = chat.messages.slice(0, -1);
+  const recentMessages = allMessages.slice(-RECENT_MESSAGE_LIMIT);
+  const olderMessages = allMessages.slice(0, -RECENT_MESSAGE_LIMIT);
 
   let droppedSummary = "";
-  if (droppedMessages.length > 0) {
+  if (olderMessages.length > 0) {
     droppedSummary = await summarizeConversation(
-      droppedMessages.map((m) => ({ role: m.role, content: m.content })) as any,
+      olderMessages.map((m) => ({ role: m.role, content: m.content })) as any,
     );
   }
 
@@ -308,7 +315,7 @@ const streamEditMessage = async ({
   const customInstr = userData?.customInstructions?.trim();
   const systemPrompt = `You are an AI assistant helping ${chat.userName}. Be helpful, accurate, and concise.${customInstr ? `\n\n[User Instructions]\n${customInstr}` : ""}`;
 
-  const contents: { role: string; parts: { text: string }[] }[] = [
+  const contents: { role: string; parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] }[] = [
     {
       role: "user",
       parts: [{ text: `[System Context]\n${systemPrompt}` }],
@@ -318,12 +325,11 @@ const streamEditMessage = async ({
   if (droppedSummary) {
     contents.push({
       role: "user",
-      parts: [{ text: `[Earlier context]: ${droppedSummary}` }],
+      parts: [{ text: `[Earlier context summary]:\n${droppedSummary}` }],
     });
   }
 
-  const historyMessages = prunedMessages.slice(0, -1);
-  for (const msg of historyMessages) {
+  for (const msg of recentMessages) {
     contents.push({
       role: msg.role,
       parts: [{ text: msg.content }],
@@ -335,27 +341,16 @@ const streamEditMessage = async ({
     parts: [{ text: prompt }],
   });
 
-  // Token budget logging
-  let tokenBudget = budget.total;
   const systemTokens = tokenCounter.count(systemPrompt);
   const historyTokens = tokenCounter.count(
-    historyMessages.map((m) => m.content).join(" "),
+    recentMessages.map((m) => m.content).join(" "),
   );
   const promptTokens = tokenCounter.count(prompt);
-  tokenBudget -= systemTokens + historyTokens + promptTokens;
 
-  if (tokenBudget < 100) {
-    console.log(
-      `[ContextBudget] Warning: only ${tokenBudget} tokens remaining for response`,
-    );
-  }
-
-  contextBudget.logBudgetAllocation(budget, {
-    system: systemTokens,
-    history: historyTokens,
-    prompt: promptTokens,
-    total: systemTokens + historyTokens + promptTokens,
-  });
+  console.log(
+    `[Context] recent:${recentMessages.length} older:${olderMessages.length} summary:${droppedSummary ? "yes" : "no"} ` +
+    `tokens: sys:${systemTokens} hist:${historyTokens} prompt:${promptTokens}`,
+  );
 
   const genStream = provider.generateContentStream(contents, signal, {
     onFunctionCall: async (call) => {

@@ -6,7 +6,7 @@ import express from "express";
 const applyMiddleware = (app: Express): void => {
   app.use(cors());
   app.use(morgan("dev"));
-  app.use(express.json());
+  app.use(express.json({ limit: "10mb" }));
 };
 
 export default applyMiddleware;

@@ -87,6 +87,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         setSelectedFiles((prev) => [...prev, ...read]);
 
         if (fileInputRef.current) fileInputRef.current.value = "";
+        textareaRef.current?.focus();
       },
       [selectedFiles.length],
     );
