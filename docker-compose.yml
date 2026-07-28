@@ -3,8 +3,8 @@ version: "3.8"
 services:
   # ---------- MongoDB ----------
   mongo:
-    image: mongo:latest
-    container_name: cvcoach-mongo
+    image: mongo:7
+    container_name: mongo
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${ROOT_USERNAME}
@@ -20,7 +20,7 @@ services:
   # ---------- MongoDB Express (Web UI) ----------
   mongo-express:
     image: mongo-express:latest
-    container_name: cvcoach-mongo-express
+    container_name: mongo-express
     restart: unless-stopped
     ports:
       - "8081:8081"
@@ -37,8 +37,10 @@ services:
 
   # ---------- Backend ----------
   backend:
-    build: ./backend
-    container_name: cvcoach-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chatbot-backend
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -46,6 +48,9 @@ services:
       - ./backend/.env
     environment:
       MONGODB_URI: ${MONGODB_URI}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     depends_on:
       - mongo
     networks:
@@ -53,11 +58,16 @@ services:
 
   # ---------- Frontend ----------
   frontend:
-    build: ./frontend
-    container_name: cvcoach-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chatbot-frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     env_file:
       - ./frontend/.env
     depends_on:

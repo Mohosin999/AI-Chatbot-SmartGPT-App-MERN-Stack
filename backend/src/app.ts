@@ -9,7 +9,7 @@ applyMiddleware(app);
 app.use(routes);
 
 app.get("/", (_req: Request, res: Response) => {
-  res.send("Thinkly ➤ Welcome to Home");
+  res.send("Chatbot ➤ Welcome to Home");
 });
 
 app.get("/health", (req: Request, res: Response) => {
