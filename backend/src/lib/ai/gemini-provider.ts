@@ -1,7 +1,18 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { AIProvider, GenerationConfig, ToolDefinition, ToolCall, ToolResult, FunctionCallHandler } from "./provider";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+import genAI from "../../config/gemini";
+import type {
+  Content,
+  GenerateContentRequest,
+  Tool,
+} from "@google/generative-ai";
+import type { AIProvider, FunctionCallHandler } from "./provider";
+import {
+  GeminiContent,
+  GeminiPart,
+  ToolCall,
+  ToolDefinition,
+  ToolResult,
+} from "./types";
+import { GenerationConfig } from "../../types/common";
 
 const mapRole = (role: string): string => {
   if (role === "assistant") return "model";
@@ -12,9 +23,7 @@ const mapRole = (role: string): string => {
 export class GeminiProvider implements AIProvider {
   readonly name = "gemini";
 
-  // Creates a Gemini model instance with optional generation config
   private getModel(config?: GenerationConfig) {
-    // Only add generationConfig if at least one option is set
     const hasConfig = config && Object.keys(config).length > 0;
     return genAI.getGenerativeModel({
       model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
@@ -22,36 +31,36 @@ export class GeminiProvider implements AIProvider {
     });
   }
 
-  // Convert our generic config to Gemini's format
   private mapConfig(config: GenerationConfig): Record<string, unknown> {
-    const gc: Record<string, unknown> = {};
-    if (config.temperature !== undefined) gc.temperature = config.temperature;
-    if (config.topP !== undefined) gc.topP = config.topP;
-    if (config.topK !== undefined) gc.topK = config.topK;
-    if (config.maxOutputTokens !== undefined) gc.maxOutputTokens = config.maxOutputTokens;
-    if (config.responseMimeType) gc.responseMimeType = config.responseMimeType;
-    if (config.responseSchema) gc.responseSchema = config.responseSchema;
-    return gc;
+    const mapped: Record<string, unknown> = {};
+    if (config.temperature !== undefined)
+      mapped.temperature = config.temperature;
+    if (config.topP !== undefined) mapped.topP = config.topP;
+    if (config.topK !== undefined) mapped.topK = config.topK;
+    if (config.maxOutputTokens !== undefined)
+      mapped.maxOutputTokens = config.maxOutputTokens;
+    if (config.responseMimeType)
+      mapped.responseMimeType = config.responseMimeType;
+    if (config.responseSchema) mapped.responseSchema = config.responseSchema;
+    return mapped;
   }
 
-  // Convert our generic tool definitions to Gemini's Tool format
   private mapTools(tools: ToolDefinition[]) {
-    return [{
-      functionDeclarations: tools.map(t => ({
-        name: t.function.name,
-        description: t.function.description,
-        parameters: t.function.parameters,
-      })),
-    }];
+    return [
+      {
+        functionDeclarations: tools.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
+      },
+    ];
   }
 
-  // Convert our generic role format to Gemini's format
-  private mapContents(
-    contents: { role: string; parts: { text?: string; functionCall?: unknown; functionResponse?: unknown }[] }[]
-  ) {
+  private mapContents(contents: GeminiContent[]) {
     return contents.map((c) => ({
       role: mapRole(c.role),
-      parts: c.parts.map(p => {
+      parts: c.parts.map((p) => {
         if (p.functionCall) return { functionCall: p.functionCall };
         if (p.functionResponse) return { functionResponse: p.functionResponse };
         return { text: p.text || "" };
@@ -59,12 +68,12 @@ export class GeminiProvider implements AIProvider {
     }));
   }
 
-  /*
-   * Internal streaming method with depth tracking.
-   * depth prevents infinite loops if the AI keeps calling tools.
-   */
+  // ---------------------------------------------------------------------
+  // Streaming
+  // ---------------------------------------------------------------------
+
   private async *_streamWithTools(
-    contents: { role: string; parts: { text?: string; functionCall?: unknown; functionResponse?: unknown }[] }[],
+    contents: GeminiContent[],
     signal: AbortSignal | undefined,
     tools: ToolDefinition[] | undefined,
     onFunctionCall: FunctionCallHandler | undefined,
@@ -78,34 +87,29 @@ export class GeminiProvider implements AIProvider {
     }
 
     const model = this.getModel(config);
-    const request: any = { contents: this.mapContents(contents) };
+    const request: GenerateContentRequest = {
+      contents: this.mapContents(contents) as Content[],
+    };
     if (tools && tools.length > 0) {
-      request.tools = this.mapTools(tools);
+      request.tools = this.mapTools(tools) as Tool[];
     }
 
     const result = await model.generateContentStream(request);
-    const textChunks: string[] = [];
 
-    // Stream all text chunks from this round
+    // --- Stream all text chunks from this round ---
     for await (const chunk of result.stream) {
       if (signal?.aborted) break;
       const text = chunk.text();
       if (text) {
-        textChunks.push(text);
         yield text;
       }
     }
 
     if (signal?.aborted) return;
 
-    // After streaming, check if the AI wants to call any function
+    // If model requests function calls, execute them, append results to conversation, and recurse (max depth 5)
     const response = await result.response;
-    /*
-     * Gemini SDK returns functionCalls() from the aggregated response.
-     * It returns an array of { name, args, id? } or undefined.
-     */
-    const rawCalls = (response as any).functionCalls?.();
-    const functionCalls: Array<{ name: string; args: Record<string, unknown>; id?: string }> | undefined = rawCalls;
+    const functionCalls = response.functionCalls();
 
     if (functionCalls && functionCalls.length > 0 && onFunctionCall) {
       const toolResults: ToolResult[] = [];
@@ -113,44 +117,46 @@ export class GeminiProvider implements AIProvider {
         const toolCall: ToolCall = {
           name: fc.name,
           args: JSON.stringify(fc.args ?? {}),
-          id: fc.id || fc.name,
+          id: fc.name,
         };
         const result = await onFunctionCall(toolCall);
         toolResults.push(result);
       }
 
-      // Build Gemini-format parts for the assistant's function call
-      const fcParts = functionCalls.map(fc => ({
+      const functionCallParts = functionCalls.map((fc) => ({
         functionCall: { name: fc.name, args: fc.args ?? {} },
       }));
 
-      // Build Gemini-format parts for the tool results
-      const frParts = toolResults.map(tr => ({
+      const functionResponseParts = toolResults.map((tr) => ({
         functionResponse: { name: tr.name, response: { result: tr.result } },
       }));
 
-      // Append to conversation: first the model's function call, then our tool responses
-      const updatedContents = [
+      const updatedContents: GeminiContent[] = [
         ...contents,
-        { role: "model" as const, parts: fcParts },
-        { role: "user" as const, parts: frParts },
+        { role: "model", parts: functionCallParts as GeminiPart[] },
+        { role: "user", parts: functionResponseParts as GeminiPart[] },
       ];
 
-      // Recurse with the updated conversation
+      // Recurse with tool results appended — AI needs updated context for its final reply
       for await (const chunk of this._streamWithTools(
-        updatedContents, signal, tools, onFunctionCall, config, depth + 1
+        updatedContents,
+        signal,
+        tools,
+        onFunctionCall,
+        config,
+        depth + 1,
       )) {
         yield chunk;
       }
     }
   }
 
-  /*
-   * Non-streaming internal method with depth tracking.
-   * Handles the function calling loop internally.
-   */
+  // ---------------------------------------------------------------------
+  // Non-streaming
+  // ---------------------------------------------------------------------
+
   private async _contentWithTools(
-    contents: { role: string; parts: { text?: string; functionCall?: unknown; functionResponse?: unknown }[] }[],
+    contents: GeminiContent[],
     tools: ToolDefinition[] | undefined,
     onFunctionCall: FunctionCallHandler | undefined,
     config: GenerationConfig | undefined,
@@ -161,39 +167,64 @@ export class GeminiProvider implements AIProvider {
     }
 
     const model = this.getModel(config);
-    const request: any = { contents: this.mapContents(contents) };
+    const request: GenerateContentRequest = {
+      contents: this.mapContents(contents) as Content[],
+    };
     if (tools?.length) {
-      request.tools = this.mapTools(tools);
+      request.tools = this.mapTools(tools) as Tool[];
     }
 
     const result = await model.generateContent(request);
     const response = result.response;
 
-    const rawCalls = (response as any).functionCalls?.();
-    const functionCalls: Array<{ name: string; args: Record<string, unknown>; id?: string }> | undefined = rawCalls;
+    const functionCalls = response.functionCalls();
 
     if (functionCalls?.length && onFunctionCall) {
       const toolResults: ToolResult[] = [];
       for (const fc of functionCalls) {
-        const result = await onFunctionCall({
+        const toolCall: ToolCall = {
           name: fc.name,
           args: JSON.stringify(fc.args ?? {}),
-          id: fc.id || fc.name,
-        });
+          id: fc.name,
+        };
+        const result = await onFunctionCall(toolCall);
         toolResults.push(result);
       }
 
-      const updatedContents = [
+      const updatedContents: GeminiContent[] = [
         ...contents,
-        { role: "model" as const, parts: functionCalls.map(fc => ({ functionCall: { name: fc.name, args: fc.args ?? {} } })) },
-        { role: "user" as const, parts: toolResults.map(tr => ({ functionResponse: { name: tr.name, response: { result: tr.result } } })) },
+        {
+          role: "model",
+          parts: functionCalls.map((fc) => ({
+            functionCall: { name: fc.name, args: fc.args ?? {} },
+          })) as GeminiPart[],
+        },
+        {
+          role: "user",
+          parts: toolResults.map((tr) => ({
+            functionResponse: {
+              name: tr.name,
+              response: { result: tr.result },
+            },
+          })) as GeminiPart[],
+        },
       ];
 
-      return this._contentWithTools(updatedContents, tools, onFunctionCall, config, depth + 1);
+      return this._contentWithTools(
+        updatedContents,
+        tools,
+        onFunctionCall,
+        config,
+        depth + 1,
+      );
     }
 
     return response.text().trim();
   }
+
+  // ---------------------------------------------------------------------
+  // Public API
+  // ---------------------------------------------------------------------
 
   async *generateContentStream(
     contents: { role: string; parts: { text: string }[] }[],
@@ -202,7 +233,7 @@ export class GeminiProvider implements AIProvider {
       config?: GenerationConfig;
       tools?: ToolDefinition[];
       onFunctionCall?: FunctionCallHandler;
-    }
+    },
   ): AsyncGenerator<string> {
     yield* this._streamWithTools(
       contents,
@@ -219,7 +250,7 @@ export class GeminiProvider implements AIProvider {
       config?: GenerationConfig;
       tools?: ToolDefinition[];
       onFunctionCall?: FunctionCallHandler;
-    }
+    },
   ): Promise<string> {
     return this._contentWithTools(
       contents,

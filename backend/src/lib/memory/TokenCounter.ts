@@ -24,8 +24,6 @@ export class TokenCounter {
       return Math.ceil(text.length / 4);
     }
   }
-
-
 }
 
 export const tokenCounter = new TokenCounter();

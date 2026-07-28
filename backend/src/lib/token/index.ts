@@ -1,24 +1,7 @@
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { serverError } from "../../utils/error";
-
-interface GenerateAccessTokenParams {
-  payload: Record<string, unknown>;
-  algorithm?: string;
-  secret?: string;
-  expiresIn?: string;
-}
-
-interface VerifyAccessTokenParams {
-  token: string;
-  algorithm?: string;
-  secret?: string;
-}
-
-interface DecodedTokenParams {
-  token: string;
-  algorithm?: string;
-}
+import { DecodedTokenParams, GenerateAccessTokenParams, VerifyAccessTokenParams } from "./types";
 
 const generateAccessToken = ({
   payload,
@@ -52,6 +35,7 @@ const verifyAccessToken = ({
     const decoded = jwt.verify(token, secret as string, {
       algorithms: [algorithm] as jwt.Algorithm[],
     });
+    
     return decoded as jwt.JwtPayload;
   } catch (error) {
     console.log("[JWT]", error);

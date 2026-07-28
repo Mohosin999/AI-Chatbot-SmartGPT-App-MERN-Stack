@@ -1,5 +1,5 @@
+import { MessageDocument } from "./types";
 import { tokenCounter } from "./TokenCounter";
-import type { MessageDocument } from "../../models/Chat";
 
 const TRIVIAL_PATTERNS = [
   /^(ok|okay|yes|yeah|no|nope|sure|alright|fine|got it|i see|thanks|thank you|thx|ty|👍|👎|😊|😂)$/i,

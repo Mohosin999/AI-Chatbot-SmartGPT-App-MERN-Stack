@@ -1,13 +1,4 @@
-import type { ContextBudget as ContextBudgetType } from "./types";
-
-export interface BudgetConfig {
-  totalTokens: number;
-  systemPercent: number;
-  memoryPercent: number;
-  historyPercent: number;
-  toolPercent: number;
-  reservedPercent: number;
-}
+import { BudgetConfig, ContextBudget as ContextBudgetType } from "./types";
 
 const DEFAULT_CONFIG: BudgetConfig = {
   totalTokens: 128_000,
@@ -50,7 +41,6 @@ export class ContextBudget {
         `used:${JSON.stringify(used)}`,
     );
   }
-
 }
 
 export const contextBudget = new ContextBudget();

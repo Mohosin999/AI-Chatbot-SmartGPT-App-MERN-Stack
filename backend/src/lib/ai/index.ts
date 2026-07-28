@@ -8,6 +8,7 @@ export function getAIProvider(): AIProvider {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY is not configured in .env");
     }
+
     provider = new GeminiProvider();
     console.log(`[AI] Provider: ${provider.name}`);
   }

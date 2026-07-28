@@ -1,7 +1,7 @@
 import Chat from "../../models/Chat";
 import User from "../../models/User";
 import { getAIProvider } from "../ai";
-import type { GenerationConfig } from "../ai/provider";
+import type { GenerationConfig } from "../../types/common";
 import { notFound } from "../../utils/error";
 import { contextCompressor } from "../memory/ContextCompressor";
 import { contextBudget } from "../memory/ContextBudget";
@@ -96,6 +96,7 @@ const streamMessage = async ({
 
   const needsTitle =
     !chat.name || /^(new chat|untitled)/i.test(chat.name.trim());
+
   const titleText = prompt || (files?.length ? files[0].name : "New chat");
 
   const titlePromise = needsTitle

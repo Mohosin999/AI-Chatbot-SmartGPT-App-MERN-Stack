@@ -20,8 +20,6 @@ tags:
     description: Chat Endpoints (private)
   - name: Message
     description: Message Endpoints (private)
-  - name: Image
-    description: Image Generation Endpoints (private)
 paths:
   "/auth/register":
     post:
@@ -312,12 +310,6 @@ paths:
                                 id:
                                   type: string
                                   example: "68cadea3a1ae1a981471f34f"
-                                isImage:
-                                  type: boolean
-                                  example: false
-                                isPublished:
-                                  type: boolean
-                                  example: false
                                 role:
                                   type: string
                                   example: user
@@ -406,78 +398,12 @@ paths:
                       timestamp:
                         type: number
                         example: 1758166559053
-                      isImage:
-                        type: boolean
-                        example: false
         "400":
           $ref: "#/components/responses/400"
         "401":
           $ref: "#/components/responses/401"
         "500":
           $ref: "#/components/responses/500"
-  "/images":
-    post:
-      security:
-        - bearerAuth: []
-      description: Create a New Image
-      tags: [Image]
-      requestBody:
-        content:
-          "application/json":
-            schema:
-              type: object
-              properties:
-                chatId:
-                  type: string
-                  example: "68cadea3a1ae1a981471f34f"
-                prompt:
-                  type: string
-                  example: A boy looking at the sky setting on the field.
-                isPublished:
-                  type: boolean
-                  example: false
-              required: [chatId, prompt, isPublished]
-      responses:
-        "201":
-          description: Successfully Created a New Image
-          content:
-            "application/json":
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                    format: int32
-                    example: 201
-                  message:
-                    type: string
-                    example: Successfully Created a New Image
-                  data:
-                    type: object
-                    properties:
-                      role:
-                        type: string
-                        example: "assistant"
-                      content:
-                        type: string
-                        format: url
-                        example: "https://s3.aws.com/ka.jpg"
-                      timestamp:
-                        type: number
-                        example: 1758166559053
-                      isImage:
-                        type: boolean
-                        example: true
-                      isPublished:
-                        type: boolean
-                        example: false
-        "400":
-          $ref: "#/components/responses/400"
-        "401":
-          $ref: "#/components/responses/401"
-        "500":
-          $ref: "#/components/responses/500"
-
 components:
   securitySchemes:
     bearerAuth:
@@ -505,24 +431,6 @@ components:
           format: url
           example: "/chats/1"
       required: [id, userId, userName, name, link]
-    Image:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "68cadea3a1ae1a981471f34f"
-        userName:
-          type: string
-          example: John Doe
-        cover:
-          type: string
-          format: url
-          example: "https://s3.aws.com/ka.jpg"
-        link:
-          type: string
-          format: url
-          example: "/images/1"
-      required: [id, userName, cover, link]
     Timestamp:
       type: object
       properties:

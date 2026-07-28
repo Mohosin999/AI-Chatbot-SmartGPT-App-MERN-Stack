@@ -4,19 +4,7 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: number;
-  isImage?: boolean;
-  isPublished?: boolean;
   chatName?: string;
-}
-
-export interface MessageDocument {
-  _id?: { toString(): string } | string;
-  id?: string;
-  role: string;
-  content: string;
-  timestamp: number;
-  isImage?: boolean;
-  isPublished?: boolean;
 }
 
 export interface Chat {

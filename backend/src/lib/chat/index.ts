@@ -1,10 +1,6 @@
 import Chat from "../../models/Chat";
 import { notFound } from "../../utils/error";
-
-interface User {
-  id: string;
-  name: string;
-}
+import { User } from "./types";
 
 const createChat = async (user: User) => {
   const chatData = {

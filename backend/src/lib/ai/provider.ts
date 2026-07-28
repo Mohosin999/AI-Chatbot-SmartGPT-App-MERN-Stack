@@ -1,74 +1,51 @@
-export interface GenerationConfig {
-  temperature?: number;
-  topP?: number;
-  topK?: number;
-  maxOutputTokens?: number;
-  // JSON mode: tell AI to return response in a specific format
-  responseMimeType?: string; // "application/json" for JSON mode
-  responseSchema?: Record<string, unknown>; // JSON Schema for structured output
-}
+import {
+  Content,
+  GenerationConfig,
+  ToolCall,
+  ToolDefinition,
+  ToolResult,
+} from "./types";
 
-export interface FunctionDefinition {
-  name: string;
-  description: string;
-  parameters: Record<string, unknown>; // JSON Schema for the function's arguments
-}
+const QUOTA_ERROR_PATTERNS = [
+  "429",
+  "quota",
+  "Quota",
+  "insufficient_quota",
+  "quota_exceeded",
+  "rate_limit",
+] as const;
 
-export interface ToolDefinition {
-  function: FunctionDefinition;
-}
-
-export interface ToolCall {
-  name: string;
-  args: string; // JSON string of arguments
-  id: string;
-}
-
-export interface ToolResult {
-  name: string;
-  result: string; // JSON string of the result
-  id: string;
-}
-
-// Callback that the message pipeline provides to execute a function call
+// Allows custom handling of AI function calls
 export type FunctionCallHandler = (call: ToolCall) => Promise<ToolResult>;
 
+export interface GenerateContentOptions {
+  config?: GenerationConfig;
+  tools?: ToolDefinition[];
+  onFunctionCall?: FunctionCallHandler;
+}
+
+/**
+ * Common interface for all AI providers.
+ * Lets callers switch providers without changing their code.
+ */
 export interface AIProvider {
   readonly name: string;
 
-  // Stream a response — handles function calling loop internally
   generateContentStream(
-    contents: { role: string; parts: { text: string }[] }[],
+    contents: Content[],
     signal?: AbortSignal,
-    options?: {
-      config?: GenerationConfig;
-      tools?: ToolDefinition[];
-      onFunctionCall?: FunctionCallHandler;
-    }
+    options?: GenerateContentOptions,
   ): AsyncGenerator<string>;
 
-  // Non-streaming generation — also handles function calling loop internally
   generateContent(
-    contents: { role: string; parts: { text: string }[] }[],
-    options?: {
-      config?: GenerationConfig;
-      tools?: ToolDefinition[];
-      onFunctionCall?: FunctionCallHandler;
-    }
+    contents: Content[],
+    options?: GenerateContentOptions,
   ): Promise<string>;
 
-  // Simple text prompt — no tools/config (used for title generation, summarization)
   generateContentText(prompt: string): Promise<string>;
 }
 
 export function isQuotaError(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err);
-  return (
-    msg.includes("429") ||
-    msg.includes("quota") ||
-    msg.includes("Quota") ||
-    msg.includes("insufficient_quota") ||
-    msg.includes("quota_exceeded") ||
-    msg.includes("rate_limit")
-  );
+  const message = err instanceof Error ? err.message : String(err);
+  return QUOTA_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
 }

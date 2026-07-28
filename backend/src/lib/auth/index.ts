@@ -7,6 +7,10 @@ import User from "../../models/User";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// ---------------------------------------------------------------------
+// Register
+// ---------------------------------------------------------------------
+
 const register = async ({
   name,
   email,
@@ -26,6 +30,10 @@ const register = async ({
 
   return user;
 };
+
+// ---------------------------------------------------------------------
+// Login
+// ---------------------------------------------------------------------
 
 const login = async ({
   email,
@@ -65,6 +73,10 @@ const login = async ({
 
   return { accessToken, refreshToken };
 };
+
+// ---------------------------------------------------------------------
+// Google Login
+// ---------------------------------------------------------------------
 
 const googleLogin = async ({ credential }: { credential: string }) => {
   let payload;

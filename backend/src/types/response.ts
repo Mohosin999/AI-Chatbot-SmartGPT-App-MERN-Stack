@@ -21,8 +21,6 @@ export interface GetTransformedItemsParams {
 
 export interface FormattedMessage {
   id: string;
-  isImage?: boolean;
-  isPublished?: boolean;
   role: string;
   content: string;
   timestamp: number;

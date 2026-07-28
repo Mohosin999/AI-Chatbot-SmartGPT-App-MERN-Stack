@@ -11,7 +11,6 @@ export interface Message {
   isTemp?: boolean;
   isTyping?: boolean;
   isStreaming?: boolean;
-  isImage?: boolean;
   chatName?: string;
   files?: { mimeType: string; name: string; data?: string }[];
 }
@@ -52,7 +51,4 @@ export interface CreateMessagePayload {
   chatId: string;
 }
 
-export interface CreateImagePayload {
-  prompt: string;
-  chatId: string;
-}
+

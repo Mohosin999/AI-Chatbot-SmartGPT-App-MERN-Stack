@@ -5,6 +5,7 @@ import { controllers as authController } from "../api/v1/auth";
 import { controllers as chatController } from "../api/v1/chat";
 import { controllers as messageController } from "../api/v1/message";
 import { controllers as userController } from "../api/v1/user";
+
 const router = Router();
 
 router

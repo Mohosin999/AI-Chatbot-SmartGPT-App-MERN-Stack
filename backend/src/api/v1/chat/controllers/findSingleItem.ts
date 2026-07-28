@@ -16,8 +16,6 @@ const findSingleItem = async (
         (msg._id && typeof msg._id === "object" && msg._id.toString
           ? msg._id.toString()
           : (msg as any).id) || "",
-      isImage: (msg as any).isImage as boolean | undefined,
-      isPublished: (msg as any).isPublished as boolean | undefined,
       role: msg.role,
       content: msg.content,
       timestamp: msg.timestamp ? Number(msg.timestamp) : Date.now(),

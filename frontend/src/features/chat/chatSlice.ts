@@ -375,36 +375,6 @@ export const editMessageStream = createAsyncThunk(
   },
 );
 
-export const createImage = createAsyncThunk(
-  "chat/createImage",
-  async (
-    imageData: { prompt: string; chatId: string },
-    { rejectWithValue },
-  ) => {
-    try {
-      // Retrieve authentication token from local storage
-      const accessToken = localStorage.getItem("accessToken");
-      if (!accessToken)
-        return rejectWithValue("No authentication accessToken found");
-
-      // Make POST request to generate image
-      const res = await api.post(
-        `${import.meta.env.VITE_BASE_URL}/images`,
-        imageData,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        },
-      );
-
-      return res.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Create image failed",
-      );
-    }
-  },
-);
-
 /** ---------------------------------------------------------------
  * CHAT SLICE - REDUX STATE MANAGEMENT
  ----------------------------------------------------------------*/
@@ -691,24 +661,6 @@ const chatSlice = createSlice({
             (msg) => !((msg as Message).isStreaming && msg.role === "assistant"),
           );
         }
-      })
-
-      // ---------- CREATE IMAGE LIFECYCLE ----------
-      .addCase(createImage.pending, (state) => {
-        state.isGenerating = true;
-        state.error = null;
-      })
-      .addCase(createImage.fulfilled, (state, action) => {
-        state.isGenerating = false;
-        // Add generated image to current chat messages
-        if (!state.currentChat?.data?.messages)
-          state.currentChat!.data.messages = [];
-        state.currentChat!.data.messages.push(action.payload);
-        state.error = null;
-      })
-      .addCase(createImage.rejected, (state, action) => {
-        state.isGenerating = false;
-        state.error = action.payload as string;
       })
 
       // ---------- EDIT MESSAGE STREAM LIFECYCLE ----------
