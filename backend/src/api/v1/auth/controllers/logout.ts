@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../../../../models/User";
+import { getRedisClient } from "../../../../redis";
 
 const logout = async (
   req: Request,
@@ -8,6 +8,7 @@ const logout = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
+    const { refresh_token } = req.body;
 
     if (!userId) {
       res.status(401).json({
@@ -17,10 +18,10 @@ const logout = async (
       return;
     }
 
-    await User.findByIdAndUpdate(userId, {
-      refreshToken: null,
-      refreshTokenExpiresAt: null,
-    });
+    if (refresh_token) {
+      const redis = getRedisClient();
+      await redis.del(`refresh_token:${refresh_token}`);
+    }
 
     res.status(200).json({
       code: 200,

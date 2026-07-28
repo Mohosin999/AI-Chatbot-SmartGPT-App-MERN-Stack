@@ -16,11 +16,3 @@ export interface ContextBudget {
   reserved: number;
   used: number;
 }
-
-export interface MessageDocument {
-  _id?: { toString(): string } | string;
-  id?: string;
-  role: string;
-  content: string;
-  timestamp: number;
-}

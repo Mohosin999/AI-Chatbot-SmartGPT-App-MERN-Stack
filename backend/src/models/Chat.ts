@@ -1,5 +1,5 @@
 import { Schema, model, Document } from "mongoose";
-import { MessageDocument } from "../types/chat";
+import { MessageDocument } from "../types/common";
 
 export interface ChatDocument extends Document {
   userId: string;

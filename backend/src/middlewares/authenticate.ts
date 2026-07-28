@@ -6,7 +6,7 @@ import { authenticationError } from "../utils/error";
 const authenticate = async (
   req: Request,
   _res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const authHeader = req.headers.authorization;
 
@@ -17,7 +17,10 @@ const authenticate = async (
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = tokenService.verifyAccessToken({ token }) as Record<string, unknown>;
+    const decoded = tokenService.verifyAccessToken({ token }) as Record<
+      string,
+      unknown
+    >;
     const user = await userService.findUserByEmail(decoded.email as string);
 
     if (!user) {
@@ -25,7 +28,13 @@ const authenticate = async (
     }
 
     const userObj = user.toObject ? user.toObject() : user;
-    req.user = { ...userObj, id: user.id };
+    req.user = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      password: user.password ?? undefined,
+      customInstructions: user.customInstructions,
+    };
     next();
   } catch (error) {
     console.log(error);

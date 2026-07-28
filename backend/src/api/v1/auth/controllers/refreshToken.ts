@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import * as tokenService from "../../../../lib/token";
-import User from "../../../../models/User";
 
 const refreshToken = async (
   req: Request,
@@ -14,20 +13,15 @@ const refreshToken = async (
       email: req.user!.email,
     };
 
+    const { refresh_token } = req.body;
     const newAccessToken = tokenService.generateAccessToken({ payload });
-    const { refreshToken, expiresAt } = tokenService.generateRefreshToken();
-
-    await User.findByIdAndUpdate(req.user!.id, {
-      refreshToken,
-      refreshTokenExpiresAt: expiresAt,
-    });
 
     const response = {
       code: 200,
-      message: "Access token with refresh token successfully generated",
+      message: "Access token successfully refreshed",
       data: {
         access_token: newAccessToken,
-        refresh_token: refreshToken,
+        refresh_token: refresh_token,
       },
     };
 

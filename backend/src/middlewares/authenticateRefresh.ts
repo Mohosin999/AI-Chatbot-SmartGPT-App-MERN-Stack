@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import User from "../models/User";
-import * as userService from "../lib/user";
+import { getRedisClient } from "../redis";
 import { authenticationError } from "../utils/error";
 
 const authenticateRefresh = async (
@@ -19,25 +19,21 @@ const authenticateRefresh = async (
       return;
     }
 
-    const user = await userService.findUserByRefreshToken(refresh_token);
+    const redis = getRedisClient();
+    const userId = await redis.get(`refresh_token:${refresh_token}`);
 
-    if (!user) {
+    if (!userId) {
+      // Token missing or expired (Redis auto-deleted it via TTL)
       res.status(200).json({
-        message: "Invalid session. Logging out...",
+        message: "Session expired. Logging out...",
         logout: true,
       });
       return;
     }
 
-    if (
-      "refreshTokenExpiresAt" in user &&
-      user.refreshTokenExpiresAt &&
-      new Date(user.refreshTokenExpiresAt) < new Date()
-    ) {
-      await User.findByIdAndUpdate(user.id, {
-        refreshToken: null,
-        refreshTokenExpiresAt: null,
-      });
+    const user = await User.findById(userId);
+    if (!user) {
+      await redis.del(`refresh_token:${refresh_token}`);
 
       res.status(200).json({
         message: "Session expired. Logging out...",

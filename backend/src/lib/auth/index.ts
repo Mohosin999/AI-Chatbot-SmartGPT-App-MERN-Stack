@@ -3,7 +3,6 @@ import { userExist, createUser, findUserByEmail } from "../user";
 import { badRequest } from "../../utils/error";
 import { generateHash, hashMatched } from "../../utils/hashing";
 import { generateAccessToken, generateRefreshToken } from "../token";
-import User from "../../models/User";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -64,12 +63,7 @@ const login = async ({
   };
 
   const accessToken = generateAccessToken({ payload });
-  const { refreshToken, expiresAt } = generateRefreshToken();
-
-  await User.findByIdAndUpdate(user.id, {
-    refreshToken,
-    refreshTokenExpiresAt: expiresAt,
-  });
+  const { refreshToken } = await generateRefreshToken(user.id);
 
   return { accessToken, refreshToken };
 };
@@ -111,12 +105,7 @@ const googleLogin = async ({ credential }: { credential: string }) => {
   };
 
   const ourAccessToken = generateAccessToken({ payload: tokenPayload });
-  const { refreshToken, expiresAt } = generateRefreshToken();
-
-  await User.findByIdAndUpdate(user.id, {
-    refreshToken,
-    refreshTokenExpiresAt: expiresAt,
-  });
+  const { refreshToken } = await generateRefreshToken(user.id);
 
   return { accessToken: ourAccessToken, refreshToken };
 };

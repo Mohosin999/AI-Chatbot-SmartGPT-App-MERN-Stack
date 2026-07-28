@@ -1,11 +1,6 @@
 import User from "../../models/User";
 import { badRequest } from "../../utils/error";
 
-const findUserByRefreshToken = async (refreshToken: string) => {
-  const user = await User.findOne({ refreshToken });
-  return user ?? null;
-};
-
 const findUserByEmail = async (email: string) => {
   const user = await User.findOne({ email });
   return user ?? null;
@@ -32,4 +27,4 @@ const createUser = async ({
   return user;
 };
 
-export { findUserByRefreshToken, findUserByEmail, userExist, createUser };
+export { findUserByEmail, userExist, createUser };

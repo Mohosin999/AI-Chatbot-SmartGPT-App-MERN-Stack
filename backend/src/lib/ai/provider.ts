@@ -1,10 +1,5 @@
-import {
-  Content,
-  GenerationConfig,
-  ToolCall,
-  ToolDefinition,
-  ToolResult,
-} from "./types";
+import { GenerationConfig } from "../../types/common";
+import { Content, ToolCall, ToolDefinition, ToolResult } from "./types";
 
 const QUOTA_ERROR_PATTERNS = [
   "429",

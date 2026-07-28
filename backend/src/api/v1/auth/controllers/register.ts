@@ -1,10 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as authService from "../../../../lib/auth";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../../../../lib/token";
-import User from "../../../../models/User";
+import { generateAccessToken, generateRefreshToken } from "../../../../lib/token";
 import { registerSchema } from "../../../../validators/auth";
 
 const register = async (
@@ -34,12 +30,7 @@ const register = async (
     };
 
     const accessToken = generateAccessToken({ payload });
-    const { refreshToken, expiresAt } = generateRefreshToken();
-
-    await User.findByIdAndUpdate(user.id, {
-      refreshToken,
-      refreshTokenExpiresAt: expiresAt,
-    });
+    const { refreshToken } = await generateRefreshToken(user.id);
 
     const response = {
       code: 201,

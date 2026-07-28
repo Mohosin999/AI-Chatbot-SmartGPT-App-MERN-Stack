@@ -1,4 +1,4 @@
-import { MessageDocument } from "./types";
+import { MessageDocument } from "../../types/common";
 import { tokenCounter } from "./TokenCounter";
 
 const TRIVIAL_PATTERNS = [

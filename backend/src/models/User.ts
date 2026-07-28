@@ -4,8 +4,6 @@ export interface UserDocument extends Document {
   name: string;
   email: string;
   password?: string | null;
-  refreshToken?: string | null;
-  refreshTokenExpiresAt?: Date | null;
   customInstructions?: string;
 }
 
@@ -27,11 +25,9 @@ const userSchema = new Schema<UserDocument>(
       required: false,
       default: null,
     },
-    refreshToken: { type: String, default: null },
-    refreshTokenExpiresAt: { type: Date, default: null },
     customInstructions: { type: String, default: "" },
   },
-  { timestamps: true, id: true }
+  { timestamps: true, id: true },
 );
 
 const User = model<UserDocument>("User", userSchema);

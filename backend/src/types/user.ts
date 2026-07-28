@@ -4,8 +4,6 @@ export interface User {
   name: string;
   email: string;
   password?: string | null;
-  refreshToken?: string | null;
-  refreshTokenExpiresAt?: Date | null;
   customInstructions?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -17,8 +15,6 @@ export interface UserDoc {
   name: string;
   email: string;
   password?: string | null;
-  refreshToken?: string | null;
-  refreshTokenExpiresAt?: Date | null;
   customInstructions?: string;
 }
 

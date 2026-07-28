@@ -11,3 +11,11 @@ export interface GenerationConfig {
   responseMimeType?: string; // "application/json" for JSON mode
   responseSchema?: Record<string, unknown>;
 }
+
+export interface MessageDocument {
+  _id?: { toString(): string } | string;
+  id?: string;
+  role: string;
+  content: string;
+  timestamp: number;
+}
