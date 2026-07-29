@@ -4,6 +4,7 @@ import routes from "./routes";
 import { AppError } from "./types/common";
 
 const app = express();
+app.set("trust proxy", 1);
 
 applyMiddleware(app);
 app.use(routes);
