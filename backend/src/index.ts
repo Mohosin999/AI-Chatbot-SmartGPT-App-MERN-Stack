@@ -12,9 +12,14 @@ const main = async (): Promise<void> => {
     await connectDB();
     await connectRedis();
 
-    server.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-    });
+    // Only listen when running locally / not on Vercel serverless
+    if (!process.env.VERCEL) {
+      server.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+      });
+    } else {
+      console.log("Running on Vercel - serverless mode");
+    }
   } catch (error) {
     console.log("Database Error");
     console.log(error);
@@ -22,3 +27,7 @@ const main = async (): Promise<void> => {
 };
 
 main();
+
+// Required for Vercel @vercel/node - must export app/server
+export default app;
+export { server };

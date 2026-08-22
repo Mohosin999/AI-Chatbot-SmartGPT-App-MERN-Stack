@@ -1,5 +1,6 @@
 # AI Chatbot
 
+
 Chatbot is a full-stack AI platform that leverages Google Gemini to generate intelligent, context-aware responses. Built with React and TailwindCSS on the frontend and Node.js, Express, and MongoDB on the backend, it features a secure authentication system ensuring only registered users can access their chat history, with all conversations stored in their account for future reference.
 
 ![Tech Stack](https://img.shields.io/badge/Stack-React%20%7C%20Node.js%20%7C%20MongoDB%20%7C%20Gemini%20AI-blue)
