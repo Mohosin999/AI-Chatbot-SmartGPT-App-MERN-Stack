@@ -8,7 +8,7 @@ export function getRedisClient(): Redis {
       redis = new Redis(process.env.REDIS_URL, {
         maxRetriesPerRequest: 3,
         enableReadyCheck: true,
-        tls: process.env.REDIS_URL.startsWith("redis://") ? {} : undefined,
+        tls: process.env.REDIS_URL.startsWith("rediss://") ? {} : undefined,
         retryStrategy(times) {
           const delay = Math.min(times * 50, 2000);
           return delay;
